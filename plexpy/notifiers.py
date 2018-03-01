@@ -1896,6 +1896,9 @@ class TELEGRAM(object):
             metadata = kwargs['metadata']
             poster_url = metadata.get('poster_url','')
 
+            if not self.html_support:
+                poster_data['caption'] = text
+
             if poster_url:
                 files = {'photo': (poster_url, urllib.urlopen(poster_url).read())}
                 response = requests.post('https://api.telegram.org/bot%s/%s' % (self.bot_token, 'sendPhoto'),
@@ -1906,10 +1909,16 @@ class TELEGRAM(object):
 
                 if request_status == 200:
                     logger.info(u"PlexPy Notifiers :: Telegram poster sent.")
+                    if not self.html_support:
+                        return True
                 elif request_status >= 400 and request_status < 500:
                     logger.warn(u"PlexPy Notifiers :: Telegram poster failed: %s" % request_content.get('description'))
+                    if not self.html_support:
+                        return False
                 else:
                     logger.warn(u"PlexPy Notifiers :: Telegram poster failed.")
+                    if not self.html_support:
+                        return False
 
         data['text'] = text
 
