@@ -927,7 +927,7 @@ class XBMC(object):
                 return False
 
         return True
-        
+
     def return_config_options(self):
         config_option = [{'label': 'XBMC Host:Port',
                           'value': self.hosts,
@@ -1010,7 +1010,7 @@ class Plex(object):
             except Exception:
                 logger.warn(u"PlexPy Notifiers :: Plex Home Theater notification failed.")
                 return False
-                
+
         return True
 
     def return_config_options(self):
@@ -1895,17 +1895,23 @@ class TELEGRAM(object):
 
             metadata = kwargs['metadata']
             poster_url = metadata.get('poster_url','')
+            if poster_url:
+                logger.info(u"JAPI: poster_url=%s" % poster_url)
 
             if not self.html_support:
                 poster_data['caption'] = text
 
             if poster_url:
-                files = {'photo': (poster_url, urllib.urlopen(poster_url).read())}
+                files = {'photo': open(poster_url,'rb')}
+                logger.info(u"JAPI: files=%s" % files)
                 response = requests.post('https://api.telegram.org/bot%s/%s' % (self.bot_token, 'sendPhoto'),
                                          data=poster_data,
                                          files=files)
                 request_status = response.status_code
                 request_content = json.loads(response.text)
+
+                logger.info(u"response=%s" % response)
+                logger.info(u"request_content=%s" % request_content)
 
                 if request_status == 200:
                     logger.info(u"PlexPy Notifiers :: Telegram poster sent.")

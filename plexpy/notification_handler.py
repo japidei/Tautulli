@@ -652,7 +652,7 @@ def build_notify_text(session=None, timeline=None, notify_action=None, agent_id=
         transcode_decision = 'Direct Stream'
     else:
         transcode_decision = 'Direct Play'
-    
+
     if notify_action != 'play':
         stream_duration = int((time.time() -
                                helpers.cast_to_int(session.get('started', 0)) -
@@ -716,15 +716,9 @@ def build_notify_text(session=None, timeline=None, notify_action=None, agent_id=
         thumb = None
 
     if plexpy.CONFIG.NOTIFY_UPLOAD_POSTERS and thumb:
-        # Try to retrieve a poster_url from the database
-        data_factory = datafactory.DataFactory()
-        poster_url = data_factory.get_poster_url(rating_key=poster_key)
-
-        # If no previous poster_url
-        if not poster_url and plexpy.CONFIG.NOTIFY_UPLOAD_POSTERS:
+        if plexpy.CONFIG.NOTIFY_UPLOAD_POSTERS:
             try:
-                thread_name = str(threading.current_thread().ident)
-                poster_file = os.path.join(plexpy.CONFIG.CACHE_DIR, 'cache-poster-%s' % thread_name)
+                poster_file = os.path.join(plexpy.CONFIG.CACHE_DIR, 'cache-poster-%s' % poster_key)
 
                 # Retrieve the poster from Plex and cache to file
                 result = pms_connect.get_image(img=thumb)
@@ -734,15 +728,10 @@ def build_notify_text(session=None, timeline=None, notify_action=None, agent_id=
                 else:
                     raise Exception(u'PMS image request failed')
 
-                # Upload thumb to Imgur and get link
-                poster_url = helpers.uploadToImgur(poster_file, poster_title)
-
-                # Delete the cached poster
-                os.remove(poster_file)
             except Exception as e:
                 logger.error(u"PlexPy Notifier :: Unable to retrieve poster for rating_key %s: %s." % (str(rating_key), e))
 
-        metadata['poster_url'] = poster_url
+        metadata['poster_url'] = poster_file
 
     # Fix metadata params for notify recently added grandparent
     if notify_action == 'created' and plexpy.CONFIG.NOTIFY_RECENTLY_ADDED_GRANDPARENT:
